@@ -152,7 +152,8 @@ class MotionPlanning(Drone):
         # TODO: adapt to set goal as latitude / longitude position and convert
         # choose one way of specifying position
         latlon_goal = (37.7924804,-122.3974533)
-        latlon_goal = local_to_global((100,-50,0), (latlon_home[1],latlon_home[0]))
+#        latlon_goal = local_to_global((100,-50,0), (latlon_home[1],latlon_home[0]))
+        latlon_goal = local_to_global((10,10,0), (latlon_home[1],latlon_home[0]))
 
         ned_goal =  global_to_local((latlon_goal[0],latlon_goal[1],0), (latlon_home[1],latlon_home[0]))
         grid_goal =  ned_to_grid(ned_goal,north_offset,east_offset,grid.shape)
@@ -172,12 +173,9 @@ class MotionPlanning(Drone):
         
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
-
         print('waypoints = ',waypoints)
 
-        time.sleep(10)
-
-        
+                
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)

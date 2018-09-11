@@ -171,7 +171,7 @@ def a_star(grid, h, start, goal):
         print('Failed to find a path!')
         print('**********************') 
 
-    plot_results = True
+    plot_results = False
     if plot_results:
 
         plt.imshow(grid, cmap='Greys', origin='lower')
