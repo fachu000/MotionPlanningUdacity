@@ -67,8 +67,8 @@ def grid_to_on_grid(grid,off_grid_pt):
     dist_to_free_points = np.sqrt( (off_grid_pt[0]-free_points_n)**2 + (off_grid_pt[1]-free_points_e)**2 )
     ind_closest_among_free_points = np.argmin(dist_to_free_points)
 
-    return (free_points_n[ind_closest_among_free_points],
-            free_points_e[ind_closest_among_free_points]
+    return (int(free_points_n[ind_closest_among_free_points]),
+            int(free_points_e[ind_closest_among_free_points])
             )
 
 
@@ -171,7 +171,7 @@ def a_star(grid, h, start, goal):
         print('Failed to find a path!')
         print('**********************') 
 
-    plot_results = False
+    plot_results = True
     if plot_results:
 
         plt.imshow(grid, cmap='Greys', origin='lower')
