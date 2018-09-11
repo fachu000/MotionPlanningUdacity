@@ -1,7 +1,7 @@
 from enum import Enum
 from queue import PriorityQueue
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def create_grid(data, drone_altitude, safety_distance):
     """
@@ -39,6 +39,39 @@ def create_grid(data, drone_altitude, safety_distance):
             grid[obstacle[0]:obstacle[1]+1, obstacle[2]:obstacle[3]+1] = 1
 
     return grid, int(north_min), int(east_min)
+
+
+def ned_to_grid(ned_position,north_min,east_min,grid_shape):
+
+    north_size,east_size = grid_shape
+    
+    return (int(np.clip(ned_position[0]-north_min,0,north_size-1)),
+            int(np.clip(ned_position[1]-east_min,0,east_size-1))
+            )
+
+
+def grid_to_ned(grid_position,altitude,north_min,east_min):
+
+    return (grid_position[0]+north_min,
+            grid_position[1]+east_min,
+            -altitude)
+
+
+def grid_to_on_grid(grid,off_grid_pt):
+    """"
+    returns the indices of the closest grid point with no obstacle.
+    off_grid_pt is a tuple containing the indices of a grid point. 
+    """
+
+    free_points_n,free_points_e = np.nonzero(np.logical_not(grid))
+    dist_to_free_points = np.sqrt( (off_grid_pt[0]-free_points_n)**2 + (off_grid_pt[1]-free_points_e)**2 )
+    ind_closest_among_free_points = np.argmin(dist_to_free_points)
+
+    return (free_points_n[ind_closest_among_free_points],
+            free_points_e[ind_closest_among_free_points]
+            )
+
+
 
 
 # Assume all actions cost the same.
@@ -137,6 +170,29 @@ def a_star(grid, h, start, goal):
         print('**********************')
         print('Failed to find a path!')
         print('**********************') 
+
+    plot_results = True
+    if plot_results:
+
+        plt.imshow(grid, cmap='Greys', origin='lower')
+
+        # For the purposes of the visual the east coordinate lay along
+        # the x-axis and the north coordinates long the y-axis.
+        plt.plot(start[1], start[0], 'x')
+        plt.plot(goal[1], goal[0], 'x')
+
+        if path is not None:
+            pp = np.array(path)
+            plt.plot(pp[:, 1], pp[:, 0], 'g')
+
+
+        plt.xlabel('EAST')
+        plt.ylabel('NORTH')
+        plt.show()
+
+
+
+
     return path[::-1], path_cost
 
 

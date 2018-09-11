@@ -5,11 +5,12 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid
+from planning_utils import a_star, heuristic, create_grid,ned_to_grid,\
+    grid_to_ned, grid_to_on_grid
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
-from udacidrone.frame_utils import global_to_local
+from udacidrone.frame_utils import global_to_local,local_to_global
 
 
 class States(Enum):
@@ -120,13 +121,20 @@ class MotionPlanning(Drone):
         self.target_position[2] = TARGET_ALTITUDE
 
         # TODO: read lat0, lon0 from colliders into floating point values
+        with open('colliders.csv') as file:
+            first_line = file.readline()
+
+        _,str_lat0,_,str_lon0 = first_line.split()
+        latlon_home = (float(str_lat0[0:-1]),float(str_lon0))
         
         # TODO: set home position to (lon0, lat0, 0)
+        self.set_home_position(latlon_home[1], latlon_home[0], 0)
 
         # TODO: retrieve current global position
- 
+        current_global_position = self.global_position
+  
         # TODO: convert to current local position using global_to_local()
-        
+        ned_local_position = global_to_local(current_global_position,(latlon_home[1],latlon_home[0]))
         print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
                                                                          self.local_position))
         # Read in obstacle map
@@ -135,24 +143,41 @@ class MotionPlanning(Drone):
         # Define a grid for a particular altitude and safety margin around obstacles
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
-        # Define starting point on the grid (this is just grid center)
-        grid_start = (-north_offset, -east_offset)
-        # TODO: convert start position to current position rather than map center
-        
-        # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + 10, -east_offset + 10)
-        # TODO: adapt to set goal as latitude / longitude position and convert
 
+        # Define starting point on the grid
+        # TODO: convert start position to current position rather than map center
+        grid_start = ned_to_grid(ned_local_position,north_offset,east_offset,grid.shape)
+
+        
+        # TODO: adapt to set goal as latitude / longitude position and convert
+        # choose one way of specifying position
+        latlon_goal = (37.7924804,-122.3974533)
+        latlon_goal = local_to_global((100,-50,0), (latlon_home[1],latlon_home[0]))
+
+        ned_goal =  global_to_local((latlon_goal[0],latlon_goal[1],0), (latlon_home[1],latlon_home[0]))
+        grid_goal =  ned_to_grid(ned_goal,north_offset,east_offset,grid.shape)
+
+        # find closest point on grid
+        on_grid_goal = grid_to_on_grid(grid,grid_goal)
+        print(grid_goal,on_grid_goal)
+        
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
         # or move to a different search space such as a graph (not done here)
-        print('Local Start and Goal: ', grid_start, grid_goal)
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+        print('Local Start and Goal: ', grid_start, on_grid_goal)
+        path, _ = a_star(grid, heuristic, grid_start, on_grid_goal)
         # TODO: prune path to minimize number of waypoints
         # TODO (if you're feeling ambitious): Try a different approach altogether!
 
+        
         # Convert path to waypoints
         waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
+
+        print('waypoints = ',waypoints)
+
+        time.sleep(10)
+
+        
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)
@@ -172,6 +197,9 @@ class MotionPlanning(Drone):
 
 
 if __name__ == "__main__":
+
+
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5760, help='Port number')
     parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
@@ -179,6 +207,17 @@ if __name__ == "__main__":
 
     conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), timeout=60)
     drone = MotionPlanning(conn)
+
+
+    
+    # TEST REGION
+    #drone.plan_path()
+    #quit()
+    
+    ### END TEST REGION
+
+
+
     time.sleep(1)
 
     drone.start()
