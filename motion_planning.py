@@ -121,6 +121,56 @@ class MotionPlanning(Drone):
         self.target_position[2] = TARGET_ALTITUDE
 
         # TODO: read lat0, lon0 from colliders into floating point values
+        
+        # TODO: set home position to (lon0, lat0, 0)
+
+        # TODO: retrieve current global position
+ 
+        # TODO: convert to current local position using global_to_local()
+        
+        print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
+                                                                         self.local_position))
+        # Read in obstacle map
+        data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
+        
+        # Define a grid for a particular altitude and safety margin around obstacles
+        grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
+        print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
+        # Define starting point on the grid (this is just grid center)
+        grid_start = (-north_offset, -east_offset)
+        # TODO: convert start position to current position rather than map center
+        
+        # Set goal as some arbitrary position on the grid
+        grid_goal = (-north_offset - 10, -east_offset + 10)
+        # TODO: adapt to set goal as latitude / longitude position and convert
+
+        # Run A* to find a path from start to goal
+        # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
+        # or move to a different search space such as a graph (not done here)
+        print('Local Start and Goal: ', grid_start, grid_goal)
+        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+        # TODO: prune path to minimize number of waypoints
+        # TODO (if you're feeling ambitious): Try a different approach altogether!
+
+        # Convert path to waypoints
+        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
+        # Set self.waypoints
+        self.waypoints = waypoints
+
+        print('waypoints =',self.waypoints)
+        
+        # TODO: send waypoints to sim (this is just for visualization of waypoints)
+        self.send_waypoints()
+        
+    def new_plan_path(self):
+        self.flight_state = States.PLANNING
+        print("Searching for a path ...")
+        TARGET_ALTITUDE = 5
+        SAFETY_DISTANCE = 5
+
+        self.target_position[2] = TARGET_ALTITUDE
+
+        # TODO: read lat0, lon0 from colliders into floating point values
         with open('colliders.csv') as file:
             first_line = file.readline()
 
