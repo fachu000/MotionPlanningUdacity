@@ -2,6 +2,7 @@ from enum import Enum
 from queue import PriorityQueue
 import numpy as np
 import matplotlib.pyplot as plt
+from bresenham import bresenham
 
 def create_grid(data, drone_altitude, safety_distance):
     """
@@ -73,52 +74,52 @@ def grid_to_on_grid(grid,off_grid_pt):
 
 
 
-
-# Assume all actions cost the same.
 class Action(Enum):
     """
     An action is represented by a 3 element tuple.
-
+    
     The first 2 values are the delta of the action relative
     to the current grid position. The third and final value
     is the cost of performing the action.
     """
-
-    WEST = (0, -1, 1)
-    EAST = (0, 1, 1)
-    NORTH = (-1, 0, 1)
-    SOUTH = (1, 0, 1)
-
+    LEFT = (0, -1, 1)
+    RIGHT = (0, 1, 1)
+    UP = (-1, 0, 1)
+    DOWN = (1, 0, 1)
+    UPRIGHT = (-1,1,1.41)
+    DOWNRIGHT = (1,1,1.41)
+    DOWNLEFT = (1,-1,1.41)
+    UPLEFT = (-1,-1,1.41)
+    
     @property
     def cost(self):
         return self.value[2]
-
+    
     @property
     def delta(self):
         return (self.value[0], self.value[1])
-
-
+            
+    
 def valid_actions(grid, current_node):
     """
     Returns a list of valid actions given a grid and current node.
     """
-    valid_actions = list(Action)
-    n, m = grid.shape[0] - 1, grid.shape[1] - 1
-    x, y = current_node
+    valid = [Action.UP, Action.LEFT, Action.RIGHT, Action.DOWN , 
+             Action.UPRIGHT, Action.DOWNRIGHT, Action.DOWNLEFT, 
+             Action.UPLEFT
+            ]
+   
+    for action in valid[:]:
+        next_node = (current_node[0] + action.delta[0],current_node[1] + action.delta[1])
+        if next_node[0]<0 or next_node[0]>grid.shape[0]-1 \
+                or next_node[1]<0 or next_node[1]>grid.shape[1]-1:
+            valid.remove(action)
+            continue
+        if grid[next_node[0],next_node[1]] == 1:
+            valid.remove(action)
+            
+    return valid
 
-    # check if the node is off the grid or
-    # it's an obstacle
-
-    if x - 1 < 0 or grid[x - 1, y] == 1:
-        valid_actions.remove(Action.NORTH)
-    if x + 1 > n or grid[x + 1, y] == 1:
-        valid_actions.remove(Action.SOUTH)
-    if y - 1 < 0 or grid[x, y - 1] == 1:
-        valid_actions.remove(Action.WEST)
-    if y + 1 > m or grid[x, y + 1] == 1:
-        valid_actions.remove(Action.EAST)
-
-    return valid_actions
 
 
 def a_star(grid, h, start, goal):
@@ -171,7 +172,7 @@ def a_star(grid, h, start, goal):
         print('Failed to find a path!')
         print('**********************') 
 
-    plot_results = True
+    plot_results = False
     if plot_results:
 
         plt.imshow(grid, cmap='Greys', origin='lower')
@@ -186,7 +187,7 @@ def a_star(grid, h, start, goal):
             plt.plot(pp[:, 1], pp[:, 0], 'g')
 
 
-        plt.xlabel('EAST')
+        Plt.xlabel('EAST')
         plt.ylabel('NORTH')
         plt.show()
 
@@ -200,3 +201,74 @@ def a_star(grid, h, start, goal):
 def heuristic(position, goal_position):
     return np.linalg.norm(np.array(position) - np.array(goal_position))
 
+
+
+def line_crashes(start,end,grid):
+    """
+    True if the line from start to end intersects an obstacle.
+
+    start and end are coordinates inside the grid
+    """
+    cells = np.array(list(bresenham(start[0], start[1], end[0], end[1])))
+
+    total_obstacles = np.sum( grid[cells[:,0],cells[:,1]] )
+    
+    return total_obstacles  > 0
+
+    
+
+def prune(path,grid):
+    """ 
+    This function prunes a path. The adopted algorithm invokes Bresenham's method.
+    """
+
+    if len(path) < 3:
+        pruned_path = path
+        return pruned_path
+
+    start = path[0]
+    goal = path[-1]
+
+    pruned_path = [start]
+
+    for point in path[1:]:
+
+        if line_crashes(pruned_path[-1],point,grid):
+            if previous_point:
+                pruned_path = pruned_path + [previous_point]
+                previous_point = []
+            else:
+                # if two consecutive points are found to crash by Bresenham, we have to add them anyway.
+                pruned_path = pruned_path + [point]
+        else:
+            previous_point = point
+            
+
+    if goal not in pruned_path:
+        pruned_path = pruned_path + [goal]
+            
+    plot_results = False
+    if plot_results:
+
+        plt.imshow(grid, cmap='Greys', origin='lower')
+
+        
+        plt.plot(start[1], start[0], 'x')
+        plt.plot(goal[1], goal[0], 'x')
+
+        if path is not None:
+            pp = np.array(path)
+            plt.plot(pp[:, 1], pp[:, 0], 'r')
+
+
+        if pruned_path is not None:
+            pp = np.array(pruned_path)
+            plt.plot(pp[:, 1], pp[:, 0], 'g')
+            plt.scatter(pp[:, 1], pp[:, 0])
+
+        plt.xlabel('EAST')
+        plt.ylabel('NORTH')
+
+        plt.show()
+    
+    return pruned_path

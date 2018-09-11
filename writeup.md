@@ -98,46 +98,47 @@ I did it using global_to_local() as well as ned_to_grid().
 I also introduced a line to specify the coordinates in NED, which is
 more convenient for me when doing tests.
 
+Furthermore, I created a function  grid_to_on_grid() in
+planning_utils.py that provides the closest grid point to the
+specified location. Then the destination will always be on the grid
+and not e.g. inside an obstacle.
+
 
 #### 5. Modify A* to include diagonal motion (or replace A* altogether)
-Minimal requirement here is to modify the code in planning_utils() to update the A* implementation to include diagonal motions on the grid that have a cost of sqrt(2), but more creative solutions are welcome. Explain the code you used to accomplish this step.
+
+I introduced the following modifications:
+
+- I introduced four more tuples in Action corresponding to the
+  diagonal movements. Their cost is approximately sqrt(2).
+  
+- I generalized valid_actions to check whether a candidate movement
+  results in a point off the grid or on an obstacle. The checks for
+  each candidate movement were hard coded in the original code. 
+
 
 #### 6. Cull waypoints 
-For this step you can use a collinearity test or ray tracing method like Bresenham. The idea is simply to prune your path of unnecessary waypoints. Explain the code you used to accomplish this step.
 
 
+I wrote a function line_crashes() in planning_utils.py that uses
+Bresenham's method to determine whether the line joining two spatial
+points intersect with an obstacle. 
+
+I then wrote an algorithm inside function planning_utils.prune() that
+adds a point in the path to the list of waypoints only if the line
+going from the previous waypoint to the following candidate point
+intersects an obstacle. This reduces the number of waypoints much more
+than colinearity tests since the condition for merging waypoints is
+weaker in the way I implemented. 
+
+
+![Pruned vs. unpruned list of waypoints](./misc/pruning.png)
 
 ### Execute the flight
 #### 1. Does it work?
-It works!
 
-### Double check that you've met specifications for each of the [rubric](https://review.udacity.com/#!/rubrics/1534/view) points.
-  
-# Extra Challenges: Real World Planning
-
-For an extra challenge, consider implementing some of the techniques described in the "Real World Planning" lesson. You could try implementing a vehicle model to take dynamic constraints into account, or implement a replanning method to invoke if you get off course or encounter unexpected obstacles.
+It works in all scenarios I tested.
 
 
+![Image of a test flight around the park.](./misc/flight.png)
 
 
-
--------------------------
-
-
-	 
-These scripts contain a basic planning implementation that includes...
-
-And here's a lovely image of my results (ok this image has nothing to do with it, but it's a nice example of how to include images in your writeup!)
-![Top Down View](./misc/high_up.png)
-
-Here's | A | Snappy | Table
---- | --- | --- | ---
-1 | `highlight` | **bold** | 7.41
-2 | a | b | c
-3 | *italic* | text | 403
-4 | 2 | 3 | abcd
-
-
-
-Meanwhile, here's a picture of me flying through the trees!
-![Forest Flying](./misc/in_the_trees.png)

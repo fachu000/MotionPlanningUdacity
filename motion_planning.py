@@ -6,7 +6,7 @@ from enum import Enum, auto
 import numpy as np
 
 from planning_utils import a_star, heuristic, create_grid,ned_to_grid,\
-    grid_to_ned, grid_to_on_grid
+    grid_to_ned, grid_to_on_grid, prune
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -153,38 +153,30 @@ class MotionPlanning(Drone):
         # TODO: adapt to set goal as latitude / longitude position and convert
         # choose one way of specifying position
         latlon_goal = (37.7924804,-122.3974533)
-        latlon_goal = local_to_global((100,-50,0), (latlon_home[1],latlon_home[0]))
-#        latlon_goal = local_to_global((10,10,0), (latlon_home[1],latlon_home[0]))
+#        latlon_goal = local_to_global((100,-50,0), (latlon_home[1],latlon_home[0]))
+#        latlon_goal = local_to_global((400,300,0), (latlon_home[1],latlon_home[0]))
+        latlon_goal = local_to_global((200,-300,0), (latlon_home[1],latlon_home[0]))
 
         ned_goal =  global_to_local((latlon_goal[0],latlon_goal[1],0), (latlon_home[1],latlon_home[0]))
-        grid_goal =  ned_to_grid(ned_goal,north_offset,east_offset,grid.shape)
-
-
-#Approach 1
-
-        
-#         # find closest point on grid
+        grid_goal =  ned_to_grid(ned_goal,north_offset,east_offset,grid.shape)        
+        # find closest point on grid
         on_grid_goal = grid_to_on_grid(grid,grid_goal)
-        print(grid_goal,on_grid_goal)
-#        on_grid_goal = grid_goal
-
-        print('type grid',type(grid))
-        print('type on_grid_goal',type(on_grid_goal))
 
 
-        
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
         # or move to a different search space such as a graph (not done here)
         print('Local Start and Goal: ', grid_start, on_grid_goal)
         path, _ = a_star(grid, heuristic, grid_start, on_grid_goal)
+
         # TODO: prune path to minimize number of waypoints
         # TODO (if you're feeling ambitious): Try a different approach altogether!
-
+        path = prune(path,grid)
         
         # Convert path to waypoints
-        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
-        print('waypoints = ',waypoints)
+
+        # list of waypoints follow the North-East-UP relative to the home position
+        waypoints = [  list(grid_to_ned(p,-TARGET_ALTITUDE,north_offset,east_offset))+[0] for p in path]
         self.waypoints =  waypoints # [[9, 9, 5, 0], [9, 10, 5, 0]]
 
         # TODO: send waypoints to sim (this is just for visualization of waypoints)
