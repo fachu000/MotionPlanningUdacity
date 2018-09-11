@@ -3,8 +3,7 @@
 
 ### Explain the Starter Code
 
-#### 1. Explain the functionality of what's provided in
-     `motion_planning.py` and `planning_utils.py`
+#### 1. Explain the functionality of what's provided in `motion_planning.py` and `planning_utils.py`
 	 
 First, let us compare the functionality of motion_planning.py relative
 to that of backyard_flyer.py, as requested in the rubric. It is
