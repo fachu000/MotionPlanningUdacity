@@ -151,11 +151,11 @@ class MotionPlanning(Drone):
 
         
         # TODO: adapt to set goal as latitude / longitude position and convert
-        # choose one way of specifying position
-        latlon_goal = (37.7924804,-122.3974533)
+        # choose/modify one of the following lines
+#        latlon_goal = (37.7924804,-122.3974533) # set destination directly in geodetic coords.
 #        latlon_goal = local_to_global((100,-50,0), (latlon_home[1],latlon_home[0]))
-#        latlon_goal = local_to_global((400,300,0), (latlon_home[1],latlon_home[0]))
-        latlon_goal = local_to_global((200,-300,0), (latlon_home[1],latlon_home[0]))
+        latlon_goal = local_to_global((400,300,0), (latlon_home[1],latlon_home[0]))
+#        latlon_goal = local_to_global((200,-300,0), (latlon_home[1],latlon_home[0]))
 
         ned_goal =  global_to_local((latlon_goal[0],latlon_goal[1],0), (latlon_home[1],latlon_home[0]))
         grid_goal =  ned_to_grid(ned_goal,north_offset,east_offset,grid.shape)        
@@ -174,7 +174,6 @@ class MotionPlanning(Drone):
         path = prune(path,grid)
         
         # Convert path to waypoints
-
         # list of waypoints follow the North-East-UP relative to the home position
         waypoints = [  list(grid_to_ned(p,-TARGET_ALTITUDE,north_offset,east_offset))+[0] for p in path]
         self.waypoints =  waypoints # [[9, 9, 5, 0], [9, 10, 5, 0]]

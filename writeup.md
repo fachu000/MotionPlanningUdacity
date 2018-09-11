@@ -1,69 +1,45 @@
-## Project: 3D Motion Planning
-![Quad Image](./misc/enroute.png)
-
----
-
-
-# Required Steps for a Passing Submission:
-1. Load the 2.5D map in the colliders.csv file describing the environment.
-2. Discretize the environment into a grid or graph representation.
-3. Define the start and goal locations.
-4. Perform a search using A* or other search algorithm.
-5. Use a collinearity test or ray tracing method (like Bresenham) to remove unnecessary waypoints.
-6. Return waypoints in local ECEF coordinates (format for `self.all_waypoints` is [N, E, altitude, heading], where the drone’s start location corresponds to [0, 0, 0, 0].
-7. Write it up.
-8. Congratulations!  Your Done!
-
-## [Rubric](https://review.udacity.com/#!/rubrics/1534/view) Points
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
----
 ### Writeup / README
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  
-
-You're reading it! Below I describe how I addressed each rubric point and where in my code each point is handled.
 
 ### Explain the Starter Code
 
 #### 1. Explain the functionality of what's provided in
      `motion_planning.py` and `planning_utils.py`
 	 
-	 First, let us compare the functionality of motion_planning.py
-     relative to that of backyard_flyer.py, as requested in the
-     rubric. It is observed that a new state termed PLANNING is
-     introduced. This state takes place after ARMING and before
-     TAKEOFF. In the state PLANNING, the function plan_path() is
-     executed. This function loads the 2.5D map, creates a 2D grid on
-     it, and applies A* to find a plan that goes from the current
-     position of the drone to an aribitrarily picked location.  A
-     function is also added to visualize the waypoints in the
-     simulator.
+First, let us compare the functionality of motion_planning.py relative
+to that of backyard_flyer.py, as requested in the rubric. It is
+observed that a new state termed PLANNING is introduced. This state
+takes place after ARMING and before TAKEOFF. In the state PLANNING,
+the function plan_path() is executed. This function loads the 2.5D
+map, creates a 2D grid on it, and applies A* to find a plan that goes
+from the current position of the drone to an aribitrarily picked
+location.  A function is also added to visualize the waypoints in the
+simulator.
 	 
-	 Second, let us outline the functionality of planning_utils.py.
-	 The following methods are provided:
+Second, let us outline the functionality of planning_utils.py.  The
+following methods are provided:
 	 
-	 - def create_grid(data, drone_altitude, safety_distance). This
-       function creates a 2D grid using the 2.5D map in <data>. The grid
-       resolution is one length unit, in the case of colliders.csv it
-       is 1 m. 
+- def create_grid(data, drone_altitude, safety_distance). This
+function creates a 2D grid using the 2.5D map in <data>. The grid
+resolution is one length unit, in the case of colliders.csv it
+is 1 m. 
 	   
-	 - def valid_actions(grid, current_node). This method determines
-       whether a candidate action (so movement to another grid point)
-       gets off the grid or coincides with the location of an
-       obstacle. 
+- def valid_actions(grid, current_node). This method determines
+whether a candidate action (so movement to another grid point)
+gets off the grid or coincides with the location of an
+obstacle. 
 	   
-	 - def a_star(grid, h, start, goal) implements the algorithm A*
-       for finding paths with lowest cost. A heuristic function is
-       used to speed up this search. 
+- def a_star(grid, h, start, goal) implements the algorithm A*
+for finding paths with lowest cost. A heuristic function is
+used to speed up this search. 
 	   
-	 - def heuristic(position, goal_position) is a heuristic function
-       to be used in combination with a_star(). This function returns
-       the Euclidean distance between two spatial points. 
+- def heuristic(position, goal_position) is a heuristic function
+to be used in combination with a_star(). This function returns
+the Euclidean distance between two spatial points. 
 	 
 	 	 
 	 
-------------------------- 	 
+
 
 ### Implementing Your Path Planning Algorithm
 
