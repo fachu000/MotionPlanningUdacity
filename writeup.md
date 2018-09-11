@@ -19,7 +19,7 @@ Second, let us outline the functionality of planning_utils.py.  The
 following methods are provided:
 	 
 - def create_grid(data, drone_altitude, safety_distance). This
-function creates a 2D grid using the 2.5D map in <data>. The grid
+function creates a 2D grid using the 2.5D map in `data`. The grid
 resolution is one length unit, in the case of colliders.csv it
 is 1 m. 
 	   
@@ -96,14 +96,17 @@ I introduced the following modifications:
 
 I wrote a function line_crashes() in planning_utils.py that uses
 Bresenham's method to determine whether the line joining two spatial
-points intersect with an obstacle. 
+points intersects with an obstacle. 
 
 I then wrote an algorithm inside function planning_utils.prune() that
 adds a point in the path to the list of waypoints only if the line
 going from the previous waypoint to the following candidate point
 intersects an obstacle. This reduces the number of waypoints much more
-than colinearity tests since the condition for merging waypoints is
-weaker in the way I implemented. 
+than colinearity tests since the condition used here for merging
+waypoints is weaker.
+
+The figure shows the unpruned path in red and the pruned one in
+green. 
 
 
 ![Pruned vs. unpruned list of waypoints](./misc/pruning.png)
